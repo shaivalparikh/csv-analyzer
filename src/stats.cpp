@@ -94,3 +94,7 @@ ColumnStats summarize(const std::vector<double>& values) {
 
     return {count, min, max, mean, stddev};
 }
+
+std::vector<std::size_t> numeric_columns(const Data& d) {
+    return {};
+}
