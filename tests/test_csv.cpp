@@ -43,3 +43,11 @@ TEST(ParseCsv, KeepsTrailingEmptyField) {
 TEST(LoadCsv, MissingFileThrows) {
     EXPECT_THROW(load_csv("definitely_not_here.csv"), std::runtime_error);
 }
+
+TEST(ParseCsv, KeepsTrailingEmptyFieldWithCrlf) {
+    std::istringstream in("a,b,c\r\n1,2,\r\n");
+    Data d = parse_csv(in);
+    ASSERT_EQ(d.rows.size(), 1u);
+    ASSERT_EQ(d.rows[0].size(), 3u);
+    EXPECT_EQ(d.rows[0][2], "");
+}
