@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -76,4 +77,30 @@ TEST(ColumnIsNumeric, FalseWhenNoRows) {
     std::istringstream in("a,b\n");
     Data d = parse_csv(in);
     EXPECT_FALSE(column_is_numeric(d, 0));
+}
+
+using Groups = std::map<std::string, std::vector<double>>;
+
+TEST(GroupBy, TwoGroups) {
+    std::istringstream in("id,val\nB,2\nA,1\nA,3\n");
+    Data d = parse_csv(in);
+    EXPECT_EQ(group_by(d, 0, 1), (Groups{{"A", {1, 3}}, {"B", {2}}}));
+}
+
+TEST(GroupBy, NonNumericValueColumnThrows) {
+    std::istringstream in("id,val\nB,2\nA,N/A\nA,3\n");
+    Data d = parse_csv(in);
+    EXPECT_THROW(group_by(d, 0, 1), std::invalid_argument);
+}
+
+TEST(GroupBy, ColumnOutOfRangeThrows) {
+    std::istringstream in("id,val\nB,2\nA,1\n");
+    Data d = parse_csv(in);
+    EXPECT_THROW(group_by(d, 0, 5), std::out_of_range);
+}
+
+TEST(GroupBy, HeaderOnlyThrows) {
+    std::istringstream in("id,val\n");
+    Data d = parse_csv(in);
+    EXPECT_THROW(group_by(d, 0, 1), std::invalid_argument);
 }

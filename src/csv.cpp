@@ -57,6 +57,10 @@ Data load_csv(const std::string& filename) {
     return parse_csv(file);
 }
 
+std::optional<std::size_t> find_column(const Data& d, const std::string& name) {
+    return std::nullopt;
+}
+
 void print_data(const Data& data) {
     for (const auto& col : data.header) {
         std::cout << col << " ";

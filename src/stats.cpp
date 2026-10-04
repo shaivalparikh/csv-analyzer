@@ -103,3 +103,8 @@ std::vector<std::size_t> numeric_columns(const Data& d) {
     }
     return cols;
 }
+
+std::map<std::string, std::vector<double>>
+group_by(const Data& d, std::size_t key_col, std::size_t value_col) {
+    return {};
+}
