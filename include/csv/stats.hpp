@@ -12,3 +12,9 @@ double get_max(const std::vector<double>& column);
 double calculate_sum(const std::vector<double>& column);
 double calculate_mean(double sum_val, std::size_t count_val);
 double calculate_stddev(const std::vector<double>& column, double mean_val);
+
+struct ColumnStats {
+    std::size_t count;
+    double min, max, mean, stddev;
+};
+ColumnStats summarize(const std::vector<double>& values);

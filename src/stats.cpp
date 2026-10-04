@@ -79,3 +79,18 @@ double calculate_stddev(const std::vector<double>& column, double mean_val) {
 
     return std::sqrt(sq_sum / column.size());
 }
+
+ColumnStats summarize(const std::vector<double>& values) {
+    if (values.empty()) {
+        return {0, 0, 0, 0, 0};
+    }
+
+    std::size_t count = get_count(values);
+    double min = get_min(values);
+    double max = get_max(values);
+    double sum = calculate_sum(values);
+    double mean = calculate_mean(sum, count);
+    double stddev = calculate_stddev(values, mean);
+
+    return {count, min, max, mean, stddev};
+}
