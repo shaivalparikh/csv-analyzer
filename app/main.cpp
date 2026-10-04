@@ -73,19 +73,15 @@ int main(int argc, char* argv[]){
     }
 
     for (const auto& [sensor_id, values] : grouped_data) {
+        ColumnStats stats = summarize(values);
+
         std::cout << sensor_id << "\n";
-
-        std::size_t count = get_count(values);
-        double sum = calculate_sum(values);
-        double mean = calculate_mean(sum, count);
-        double stddev = calculate_stddev(values, mean);
-
-        std::cout << "  Count: " << count << "\n";
-        std::cout << "  Min: " << get_min(values) << "\n";
-        std::cout << "  Max: " << get_max(values) << "\n";
-        std::cout << "  Sum: " << sum << "\n";
-        std::cout << "  Mean: " << mean << "\n";
-        std::cout << "  Standard Deviation: " << stddev << "\n";
+        std::cout << "  Count: " << stats.count << "\n";
+        std::cout << "  Min: " << stats.min << "\n";
+        std::cout << "  Max: " << stats.max << "\n";
+        std::cout << "  Sum: " << calculate_sum(values) << "\n";
+        std::cout << "  Mean: " << stats.mean << "\n";
+        std::cout << "  Standard Deviation: " << stats.stddev << "\n";
     }
     return 0;
 }

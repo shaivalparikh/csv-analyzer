@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <stdexcept>
 #include "csv/stats.hpp"
 
 TEST(IsNumeric, AcceptsNumbers) {
@@ -11,4 +12,35 @@ TEST(IsNumeric, RejectsNonNumbers) {
     EXPECT_FALSE(is_numeric(""));
     EXPECT_FALSE(is_numeric("3.14abc"));
     EXPECT_FALSE(is_numeric("N/A"));
+}
+
+TEST(Summarize, KnownValues) {
+    ColumnStats s = summarize({2, 4, 4, 4, 5, 5, 7, 9});
+    EXPECT_EQ(s.count, 8u);
+    EXPECT_DOUBLE_EQ(s.min, 2.0);
+    EXPECT_DOUBLE_EQ(s.max, 9.0);
+    EXPECT_DOUBLE_EQ(s.mean, 5.0);
+    EXPECT_NEAR(s.stddev, 2.0, 1e-12);
+}
+
+TEST(Summarize, SingleValue) {
+    ColumnStats s = summarize({3.5});
+    EXPECT_EQ(s.count, 1u);
+    EXPECT_DOUBLE_EQ(s.min, 3.5);
+    EXPECT_DOUBLE_EQ(s.max, 3.5);
+    EXPECT_DOUBLE_EQ(s.mean, 3.5);
+    EXPECT_DOUBLE_EQ(s.stddev, 0.0);
+}
+
+TEST(Summarize, EmptyThrows) {
+    EXPECT_THROW(summarize({}), std::invalid_argument);
+}
+
+TEST(Summarize, NegativeValues) {
+    ColumnStats s = summarize({-1, 1});
+    EXPECT_EQ(s.count, 2u);
+    EXPECT_DOUBLE_EQ(s.min, -1.0);
+    EXPECT_DOUBLE_EQ(s.max, 1.0);
+    EXPECT_DOUBLE_EQ(s.mean, 0.0);
+    EXPECT_NEAR(s.stddev, 1.0, 1e-12);
 }
