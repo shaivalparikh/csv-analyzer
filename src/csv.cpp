@@ -33,6 +33,8 @@ Data parse_csv(std::istream& input) {
         while (std::getline(ss, cell, ',')) {
             row.push_back(cell);
         }
+        if (!line.empty() && line.back() == ',') row.push_back("");
+        if (row.size() != header.size()) continue;
         rows.push_back(row);
     }
 
