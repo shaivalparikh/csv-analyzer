@@ -103,3 +103,19 @@ std::vector<std::size_t> numeric_columns(const Data& d) {
     }
     return cols;
 }
+
+std::map<std::string, std::vector<double>>
+group_by(const Data& d, std::size_t key_col, std::size_t value_col) {
+    if (key_col >= d.header.size() || value_col >= d.header.size()) {
+        throw std::out_of_range("group_by: column index out of range");
+    }
+    if (!column_is_numeric(d, value_col)) {
+        throw std::invalid_argument("group_by: value column is not numeric");
+    }
+
+    std::map<std::string, std::vector<double>> result;
+    for (const auto& row : d.rows) {
+        result[row[key_col]].push_back(std::stod(row[value_col]));
+    }
+    return result;
+}

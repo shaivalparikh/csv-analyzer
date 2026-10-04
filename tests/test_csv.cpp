@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include "csv/csv.hpp"
@@ -71,4 +72,27 @@ TEST(ParseCsv, HeaderOnlyGivesNoRows) {
     Data d = parse_csv(in);
     ASSERT_EQ(d.header.size(), 2u);
     EXPECT_TRUE(d.rows.empty());
+}
+
+TEST(FindColumn, Found) {
+    std::istringstream in("a,b,c\n1,2,3\n");
+    Data d = parse_csv(in);
+    auto r = find_column(d, "c");
+    ASSERT_TRUE(r.has_value());
+    EXPECT_EQ(*r, 2u);
+}
+
+TEST(FindColumn, Missing) {
+    std::istringstream in("a,b,c\n1,2,3\n");
+    Data d = parse_csv(in);
+    auto r = find_column(d, "z");
+    EXPECT_FALSE(r.has_value());
+}
+
+TEST(FindColumn, DuplicateReturnsFirst) {
+    std::istringstream in("a,b,a\n1,2,3\n");
+    Data d = parse_csv(in);
+    auto r = find_column(d, "a");
+    ASSERT_TRUE(r.has_value());
+    EXPECT_EQ(*r, 0u);
 }
