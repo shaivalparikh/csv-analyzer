@@ -18,3 +18,5 @@ struct ColumnStats {
     double min, max, mean, stddev;
 };
 ColumnStats summarize(const std::vector<double>& values);
+
+std::vector<std::size_t> numeric_columns(const Data& d);

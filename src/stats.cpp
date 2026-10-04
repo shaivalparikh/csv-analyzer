@@ -19,6 +19,7 @@ bool is_numeric(const std::string& str) {
 }
 
 bool column_is_numeric(const Data& data, std::size_t col) {
+    if (data.rows.empty()) return false;
     for (const auto& row : data.rows) {
         if (col >= row.size() || !is_numeric(row[col]))
             return false;
@@ -93,4 +94,12 @@ ColumnStats summarize(const std::vector<double>& values) {
     double stddev = calculate_stddev(values, mean);
 
     return {count, min, max, mean, stddev};
+}
+
+std::vector<std::size_t> numeric_columns(const Data& d) {
+    std::vector<std::size_t> cols;
+    for (std::size_t col = 0; col < d.header.size(); ++col) {
+        if (column_is_numeric(d, col)) cols.push_back(col);
+    }
+    return cols;
 }

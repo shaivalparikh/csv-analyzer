@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
+#include <sstream>
 #include <stdexcept>
+#include <vector>
+#include "csv/csv.hpp"
 #include "csv/stats.hpp"
 
 TEST(IsNumeric, AcceptsNumbers) {
@@ -43,4 +46,34 @@ TEST(Summarize, NegativeValues) {
     EXPECT_DOUBLE_EQ(s.max, 1.0);
     EXPECT_DOUBLE_EQ(s.mean, 0.0);
     EXPECT_NEAR(s.stddev, 1.0, 1e-12);
+}
+
+TEST(NumericColumns, MixedColumns) {
+    std::istringstream in("id,name,val\n1,a,2.5\n2,b,3.0\n");
+    Data d = parse_csv(in);
+    EXPECT_EQ(numeric_columns(d), (std::vector<std::size_t>{0, 2}));
+}
+
+TEST(NumericColumns, OneBadValueMakesColumnText) {
+    std::istringstream in("id,name,val\n1,a,2.5\n2,b,N/A\n");
+    Data d = parse_csv(in);
+    EXPECT_EQ(numeric_columns(d), (std::vector<std::size_t>{0}));
+}
+
+TEST(NumericColumns, EmptyFieldMakesColumnText) {
+    std::istringstream in("a,b\n1,2\n3,\n");
+    Data d = parse_csv(in);
+    EXPECT_EQ(numeric_columns(d), (std::vector<std::size_t>{0}));
+}
+
+TEST(NumericColumns, HeaderOnlyHasNone) {
+    std::istringstream in("a,b\n");
+    Data d = parse_csv(in);
+    EXPECT_TRUE(numeric_columns(d).empty());
+}
+
+TEST(ColumnIsNumeric, FalseWhenNoRows) {
+    std::istringstream in("a,b\n");
+    Data d = parse_csv(in);
+    EXPECT_FALSE(column_is_numeric(d, 0));
 }
