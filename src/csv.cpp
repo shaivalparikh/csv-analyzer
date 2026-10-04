@@ -15,13 +15,18 @@ Data parse_csv(std::istream& input) {
     std::vector<std::string> header;
 
     std::string line;
-    if (std::getline(input, line)) {
-        strip_cr(line);
-        std::stringstream ss(line);
-        std::string cell;
-        while (std::getline(ss, cell, ',')) {
-            header.push_back(cell);
-        }
+    if (!std::getline(input, line)) {
+        throw std::runtime_error("CSV has no header line");
+    }
+    strip_cr(line);
+    if (line.empty()) {
+        throw std::runtime_error("CSV header line is blank");
+    }
+
+    std::stringstream header_ss(line);
+    std::string header_cell;
+    while (std::getline(header_ss, header_cell, ',')) {
+        header.push_back(header_cell);
     }
 
     while (std::getline(input, line)) {
