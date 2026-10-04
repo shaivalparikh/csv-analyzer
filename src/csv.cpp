@@ -1,6 +1,5 @@
 #include "csv/csv.hpp"
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -62,18 +61,4 @@ std::optional<std::size_t> find_column(const Data& d, const std::string& name) {
         if (d.header[col] == name) return col;
     }
     return std::nullopt;
-}
-
-void print_data(const Data& data) {
-    for (const auto& col : data.header) {
-        std::cout << col << " ";
-    }
-    std::cout << std::endl;
-
-    for (const auto& row : data.rows) {
-        for (const auto& cell : row) {
-            std::cout << cell << " ";
-        }
-        std::cout << std::endl;
-    }
 }

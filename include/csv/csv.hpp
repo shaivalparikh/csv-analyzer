@@ -14,7 +14,4 @@ Data parse_csv(std::istream& input);
 
 Data load_csv(const std::string& filename);
 
-// Index of the first column named `name`, or std::nullopt.
 std::optional<std::size_t> find_column(const Data& d, const std::string& name);
-
-void print_data(const Data& data);

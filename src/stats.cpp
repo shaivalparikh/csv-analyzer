@@ -48,6 +48,8 @@ std::vector<double> extract_column(const Data& data, std::size_t col) {
     return values;
 }
 
+namespace {
+
 std::size_t get_count(const std::vector<double>& column){
     return column.size();
 }
@@ -80,6 +82,8 @@ double calculate_stddev(const std::vector<double>& column, double mean_val) {
 
     return std::sqrt(sq_sum / column.size());
 }
+
+}  // namespace
 
 ColumnStats summarize(const std::vector<double>& values) {
     if (values.empty()) {
