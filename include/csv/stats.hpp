@@ -1,9 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <numeric>
-#include "csv.hpp"
+#include "csv/csv.hpp"
 
 bool is_numeric(const std::string& str);
 bool column_is_numeric(const Data& data, std::size_t col);

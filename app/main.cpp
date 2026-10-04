@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <map>
-#include "csv.hpp"
-#include "stats.hpp"
+#include "csv/csv.hpp"
+#include "csv/stats.hpp"
 
 
 

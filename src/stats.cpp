@@ -1,8 +1,9 @@
-#include "stats.hpp"
-#include "csv.hpp"
+#include "csv/stats.hpp"
+#include "csv/csv.hpp"
 #include <cmath>
 #include <stdexcept>
 #include <numeric>
+#include <algorithm>
 
 bool is_numeric(const std::string& str) {
     if (str.empty()) return false;
