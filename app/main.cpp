@@ -1,87 +1,122 @@
+#include <algorithm>
+#include <exception>
+#include <format>
 #include <iostream>
-#include <fstream>
-#include <map>
-#include <stdexcept>
+#include <optional>
+#include <string>
+#include <vector>
 #include "csv/csv.hpp"
 #include "csv/stats.hpp"
 
+namespace {
 
+void print_usage(const char* prog) {
+    std::cerr << "Usage: " << prog << " <file> [group_col] [agg_col]\n"
+              << "  Summarizes every numeric column in <file>.\n"
+              << "  With group_col and agg_col, also reports the mean of agg_col per group.\n"
+              << "  Either column may be omitted; the first text and numeric columns are used.\n"
+              << "  A header-only file is valid and exits 0.\n";
+}
 
-int main(int argc, char* argv[]){
-    if (argc < 3){
-        std::cerr << "Usage: " << argv[0] << " <csv_file>" << " <feature>" << std::endl;
+void report_missing_column(const std::string& name, const Data& d) {
+    std::cerr << std::format("No column '{}'. Available:", name);
+    for (std::size_t col = 0; col < d.header.size(); ++col) {
+        std::cerr << (col == 0 ? " " : ", ") << d.header[col];
+    }
+    std::cerr << "\n";
+}
+
+std::vector<std::size_t> text_columns(const Data& d, const std::vector<std::size_t>& numeric) {
+    std::vector<std::size_t> cols;
+    for (std::size_t col = 0; col < d.header.size(); ++col) {
+        if (std::find(numeric.begin(), numeric.end(), col) == numeric.end()) {
+            cols.push_back(col);
+        }
+    }
+    return cols;
+}
+
+}  // namespace
+
+int main(int argc, char* argv[]) {
+    if (argc < 2 || argc > 4) {
+        print_usage(argv[0]);
         return 1;
     }
 
-    std::string feature = argv[2];
-
-    Data sensor_data;
     try {
-        sensor_data = load_csv(argv[1]);
+        const std::string filename = argv[1];
+        Data d = load_csv(filename);
+
+        if (d.rows.empty()) {
+            std::cout << "Loaded 0 rows\n";
+            return 0;
+        }
+
+        std::cout << std::format("Loaded {} rows, {} columns from '{}'.\n",
+                                 d.rows.size(), d.header.size(), filename);
+
+        const std::vector<std::size_t> num_cols = numeric_columns(d);
+        const std::vector<std::size_t> txt_cols = text_columns(d, num_cols);
+
+        for (std::size_t col : num_cols) {
+            ColumnStats s = summarize(extract_column(d, col));
+            std::cout << std::format(
+                "{:<12} count={:<4} min={:.2f}  max={:.2f}  mean={:.2f}  stddev={:.2f}\n",
+                d.header[col], s.count, s.min, s.max, s.mean, s.stddev);
+        }
+
+        if (!txt_cols.empty()) {
+            std::cout << "Text columns (skipped for stats):";
+            for (std::size_t col : txt_cols) std::cout << " " << d.header[col];
+            std::cout << "\n";
+        }
+
+        std::optional<std::size_t> group_col;
+        if (argc >= 3) {
+            group_col = find_column(d, argv[2]);
+            if (!group_col) {
+                report_missing_column(argv[2], d);
+                return 1;
+            }
+        } else if (!txt_cols.empty()) {
+            group_col = txt_cols.front();
+        }
+
+        std::optional<std::size_t> agg_col;
+        if (argc >= 4) {
+            agg_col = find_column(d, argv[3]);
+            if (!agg_col) {
+                report_missing_column(argv[3], d);
+                return 1;
+            }
+        } else if (!num_cols.empty()) {
+            agg_col = num_cols.front();
+        }
+
+        if (!group_col || !agg_col) {
+            std::cout << std::format("No group-by: the file has {}.\n",
+                                     !group_col ? "no text columns to group by"
+                                                : "no numeric columns to average");
+            return 0;
+        }
+
+        if (!column_is_numeric(d, *agg_col)) {
+            std::cerr << std::format("Column '{}' is not numeric, so it cannot be averaged.\n",
+                                     d.header[*agg_col]);
+            return 1;
+        }
+
+        std::cout << std::format("\nGroup by '{}' - mean {}\n",
+                                 d.header[*group_col], d.header[*agg_col]);
+        for (const auto& [key, values] : group_by(d, *group_col, *agg_col)) {
+            ColumnStats s = summarize(values);
+            std::cout << std::format("  {:<12} n={:<4} mean={:.2f}\n", key, s.count, s.mean);
+        }
+
+        return 0;
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << "\n";
         return 1;
     }
-
-    if (sensor_data.rows.empty()) {
-        std::cerr << "CSV is empty." << std::endl;
-        return 1;
-    }
-
-    std::size_t sensor_col = sensor_data.header.size();
-    std::size_t feature_col = sensor_data.header.size();
-
-    for (std::size_t col = 0; col < sensor_data.header.size(); ++col) {
-        if (sensor_data.header[col] == "sensor_id") {
-            sensor_col = col;
-        }
-        if (sensor_data.header[col] == feature) {
-            feature_col = col;
-        }
-    }
-
-    if (sensor_col == sensor_data.header.size()) {
-        std::cerr << "No sensor_id column found in the data.\n";
-        return 1;
-    }
-
-    if (feature_col == sensor_data.header.size()) {
-        std::cerr << "No feature named '" << feature << "' in the data.\n";
-        return 1;
-    }
-
-    if (feature == "sensor_id") {
-        std::cerr << "Feature 'sensor_id' is not numeric and cannot be analyzed.\n";
-        return 1;
-    }
-
-    std::map<std::string, std::vector<double>> grouped_data;
-
-    for (const auto& row : sensor_data.rows) {
-        if (row.size() <= sensor_col || row.size() <= feature_col) {
-            continue;
-        }
-
-        std::string sensor_id = row[sensor_col];
-        const std::string& value_str = row[feature_col];
-
-        if (!is_numeric(value_str)) {
-            continue;
-        }
-
-        grouped_data[sensor_id].push_back(std::stod(value_str));
-    }
-
-    for (const auto& [sensor_id, values] : grouped_data) {
-        ColumnStats stats = summarize(values);
-
-        std::cout << sensor_id << "\n";
-        std::cout << "  Count: " << stats.count << "\n";
-        std::cout << "  Min: " << stats.min << "\n";
-        std::cout << "  Max: " << stats.max << "\n";
-        std::cout << "  Sum: " << calculate_sum(values) << "\n";
-        std::cout << "  Mean: " << stats.mean << "\n";
-        std::cout << "  Standard Deviation: " << stats.stddev << "\n";
-    }
-    return 0;
 }
