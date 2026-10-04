@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <stdexcept>
 #include "csv/csv.hpp"
 #include "csv/stats.hpp"
 
@@ -13,7 +14,14 @@ int main(int argc, char* argv[]){
     }
 
     std::string feature = argv[2];
-    Data sensor_data = load_csv(argv[1]);
+
+    Data sensor_data;
+    try {
+        sensor_data = load_csv(argv[1]);
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
 
     if (sensor_data.rows.empty()) {
         std::cerr << "CSV is empty." << std::endl;

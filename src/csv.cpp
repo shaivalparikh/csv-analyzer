@@ -2,19 +2,21 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
+namespace {
+void strip_cr(std::string& s) {
+    if (!s.empty() && s.back() == '\r') s.pop_back();
+}
+}  // namespace
 
-
-Data load_csv(const std::string& filename) {
-    std::ifstream file(filename);
+Data parse_csv(std::istream& input) {
     std::vector<std::vector<std::string>> rows;
     std::vector<std::string> header;
-    if (!file.is_open()){
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return Data{{}, {}};
-    }
+
     std::string line;
-    if (std::getline(file, line)) {
+    if (std::getline(input, line)) {
+        strip_cr(line);
         std::stringstream ss(line);
         std::string cell;
         while (std::getline(ss, cell, ',')) {
@@ -22,7 +24,8 @@ Data load_csv(const std::string& filename) {
         }
     }
 
-    while (std::getline(file, line)) {
+    while (std::getline(input, line)) {
+        strip_cr(line);
         if (line.empty()) continue;
         std::stringstream ss(line);
         std::string cell;
@@ -34,6 +37,17 @@ Data load_csv(const std::string& filename) {
     }
 
     return Data{header, rows};
+}
+
+Data load_csv(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open file: " + filename);
+    }
+    if (file.peek(), file.fail()) {
+        throw std::runtime_error("Could not read file: " + filename);
+    }
+    return parse_csv(file);
 }
 
 void print_data(const Data& data) {
