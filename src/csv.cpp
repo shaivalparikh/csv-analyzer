@@ -58,6 +58,9 @@ Data load_csv(const std::string& filename) {
 }
 
 std::optional<std::size_t> find_column(const Data& d, const std::string& name) {
+    for (std::size_t col = 0; col < d.header.size(); ++col) {
+        if (d.header[col] == name) return col;
+    }
     return std::nullopt;
 }
 
