@@ -24,6 +24,22 @@ TEST(ParseCsv, SkipsBlankCrlfLine) {
     EXPECT_EQ(d.rows.size(), 2u);
 }
 
+TEST(ParseCsv, SkipsRaggedRows) {
+    std::istringstream in("a,b\n1,2\n3\n4,5\n");
+    Data d = parse_csv(in);
+    ASSERT_EQ(d.rows.size(), 2u);
+    EXPECT_EQ(d.rows[0][0], "1");
+    EXPECT_EQ(d.rows[1][0], "4");
+}
+
+TEST(ParseCsv, KeepsTrailingEmptyField) {
+    std::istringstream in("a,b,c\n1,2,\n");
+    Data d = parse_csv(in);
+    ASSERT_EQ(d.rows.size(), 1u);
+    ASSERT_EQ(d.rows[0].size(), 3u);
+    EXPECT_EQ(d.rows[0][2], "");
+}
+
 TEST(LoadCsv, MissingFileThrows) {
     EXPECT_THROW(load_csv("definitely_not_here.csv"), std::runtime_error);
 }
