@@ -82,7 +82,7 @@ double calculate_stddev(const std::vector<double>& column, double mean_val) {
 
 ColumnStats summarize(const std::vector<double>& values) {
     if (values.empty()) {
-        return {0, 0, 0, 0, 0};
+        throw std::invalid_argument("summarize: empty input");
     }
 
     std::size_t count = get_count(values);
